@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     force_sae_conversion: bool = False
 
     # Feature Detection
-    quarantined_features_path: str = "./features/quarantined_features.json"
+    quarantined_features_path: str = "../features/quarantined_features.json"
     activation_threshold: float = 1e-3
     feature_top_k: int = 10
 

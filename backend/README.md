@@ -43,7 +43,7 @@ FastAPI-based inference server that monitors LLM outputs for harmful feature act
    # Edit .env with your configuration
    ```
 
-3. Ensure `quarantined_features.json` exists in `features/` directory
+3. Ensure `quarantined_features.json` exists in the root `features/` directory (outside backend folder)
 
 ## Configuration
 
@@ -52,7 +52,7 @@ Key environment variables (see `.env.example`):
 - `MODX_MODEL_ID`: HuggingFace model ID (default: "meta-llama/Llama-3.1-8B")
 - `MODX_LAYER`: Layer index for SAE probing (default: 21)
 - `MODX_SAE_BASE_PATH`: Path where converted SAEs are stored
-- `MODX_QUARANTINED_FEATURES_PATH`: Path to quarantined features JSON
+- `MODX_QUARANTINED_FEATURES_PATH`: Path to quarantined features JSON (default: `../features/quarantined_features.json`)
 - `HF_TOKEN`: HuggingFace token (optional, for private repos)
 
 ## Running the Service
