@@ -132,9 +132,9 @@ class InferencePipeline:
             max_length=512,
         )
 
-        # Move tokens to device
-        if self.device == "cuda" and torch.cuda.is_available():
-            tokens = tokens.cuda()
+        # Move tokens to device (ensure same device as model)
+        device = torch.device(self.device) if isinstance(self.device, str) else self.device
+        tokens = tokens.to(device)
 
         # Generate using the underlying transformer model
         # LanguageModel wraps a HookedTransformer, accessible via model.model
@@ -183,9 +183,9 @@ class InferencePipeline:
                 max_length=1024,
             )
 
-            # Move to device
-            if self.device == "cuda" and torch.cuda.is_available():
-                tokens = tokens.cuda()
+            # Move to device (ensure same device as model)
+            device = torch.device(self.device) if isinstance(self.device, str) else self.device
+            tokens = tokens.to(device)
 
             # Use run_with_cache to capture activations (as in notebook)
             # This is more efficient than using hooks
@@ -205,7 +205,8 @@ class InferencePipeline:
                 return None
 
             # Convert to bfloat16 and ensure on correct device (as in notebook)
-            layer_activations = layer_activations.to(self.device).to(torch.bfloat16)
+            device = torch.device(self.device) if isinstance(self.device, str) else self.device
+            layer_activations = layer_activations.to(device).to(torch.bfloat16)
 
             return layer_activations
 

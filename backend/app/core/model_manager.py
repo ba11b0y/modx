@@ -60,6 +60,15 @@ class ModelManager:
             cfg.tokenizer_only = False
 
             self.model = load_model(cfg)
+            
+            # Move model to device
+            if self.device == "cuda" and torch.cuda.is_available():
+                self.model.model = self.model.model.cuda()
+                logger.info(f"Model moved to CUDA")
+            else:
+                self.device = "cpu"
+                logger.info(f"Model on CPU")
+            
             logger.info(f"Successfully loaded model: {model_id}")
 
             return self.model
