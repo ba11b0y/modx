@@ -198,10 +198,11 @@ class InferencePipeline:
                 )
 
             # Extract activations for the specified layer
-            layer_activations = activations.get(hook_point)
-            
-            if layer_activations is None:
-                logger.error(f"Failed to capture activations at {hook_point}")
+            # ActivationCache is accessed like a dictionary with [] not .get()
+            try:
+                layer_activations = activations[hook_point]
+            except KeyError:
+                logger.error(f"Hook point '{hook_point}' not found in activations cache")
                 return None
 
             # Convert to bfloat16 and ensure on correct device (as in notebook)
