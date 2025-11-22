@@ -97,10 +97,43 @@ class InferencePipeline:
         feature_activations = self.sae_manager.encode_activations(layer, activations)
 
         # Step 5: Check for quarantined features
+        # Only check first token after prompt and last token of generated text
+        # Get sequence length from feature activations
+        if feature_activations.dim() == 3:
+            seq_len = feature_activations.shape[1]
+        else:
+            seq_len = feature_activations.shape[0]
+        
+        # Tokenize prompt to find where generated text starts
+        prompt_tokens = to_tokens(
+            tokenizer=tokenizer,
+            text=prompt,
+            prepend_bos=False,
+            max_length=1024,
+        )
+        prompt_length = prompt_tokens.shape[-1] if prompt_tokens.dim() > 0 else len(prompt_tokens)
+        
+        # First token after prompt (first generated token) and last token position
+        first_token_after_prompt = prompt_length
+        last_token = seq_len - 1
+        
+        # Only check first token after prompt and last token
+        token_positions = []
+        if first_token_after_prompt < seq_len:
+            token_positions.append(first_token_after_prompt)  # First token after prompt
+        if last_token >= first_token_after_prompt and last_token != first_token_after_prompt:
+            token_positions.append(last_token)  # Last token (only if different from first)
+        
+        logger.info(
+            f"Checking quarantined features at token positions: {token_positions} "
+            f"(first after prompt: {first_token_after_prompt}, last: {last_token}, seq_len: {seq_len})"
+        )
+        
         detection_result = self.feature_detector.detect_quarantined_activations(
             feature_activations,
             layer=layer,
             top_k=self.settings.feature_top_k,
+            token_positions=token_positions if token_positions else [first_token_after_prompt],
         )
 
         logger.info(
