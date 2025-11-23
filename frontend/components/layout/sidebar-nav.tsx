@@ -4,7 +4,7 @@ import type React from "react"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Upload, ShieldAlert, Database } from "lucide-react"
+import { Upload, ShieldAlert, Database } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
@@ -20,11 +20,6 @@ export function SidebarNav({ className, ...props }: SidebarNavProps) {
   const pathname = usePathname()
 
   const items = [
-    {
-      title: "Overview",
-      href: "/",
-      icon: <LayoutDashboard className="w-4 h-4 mr-2" />,
-    },
     {
       title: "Model Checks",
       href: "/checks",

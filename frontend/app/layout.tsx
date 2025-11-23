@@ -8,7 +8,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "AI Control Dashboard",
+  title: "modx",
   description: "Model diffing, activation analysis, and real-time monitoring for AI models",
   generator: "v0.app",
   icons: {

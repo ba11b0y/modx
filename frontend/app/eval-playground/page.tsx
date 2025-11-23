@@ -1,17 +1,19 @@
 "use client"
 
 import { useState, useEffect, Suspense } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { DashboardShell } from "@/components/dashboard-shell"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Play, Loader2, AlertTriangle, Zap } from "lucide-react"
-import { generateText, listModels, type GenerateResponse, type ActivatedFeature } from "@/lib/api"
+import { generateText, listModels, analyzeModel, type GenerateResponse, type ActivatedFeature } from "@/lib/api"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { ModelUploader } from "@/components/model-uploader"
+import { AnalysisProgress } from "@/components/analysis-progress"
 
 const BASE_MODEL_ID = "meta-llama/Llama-3.1-8B-Instruct"
 
@@ -27,6 +29,7 @@ const buildPrompt = (userInput: string): string => {
 
 function EvalPlaygroundContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const uploadedModelId = searchParams.get("modelId")
 
   const [prompt, setPrompt] = useState("")
@@ -37,6 +40,8 @@ function EvalPlaygroundContent() {
   const [generationResult, setGenerationResult] = useState<GenerateResponse | null>(null)
   const [maxTokens, setMaxTokens] = useState(100)
   const [temperature, setTemperature] = useState(0.4)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
 
   useEffect(() => {
     // Load available models
@@ -60,6 +65,23 @@ function EvalPlaygroundContent() {
       setAvailableModels(modelIds)
     } catch (err) {
       console.error("Failed to load models:", err)
+    }
+  }
+
+  const handleAnalyze = async (url: string) => {
+    setIsAnalyzing(true)
+    setAnalysisError(null)
+
+    try {
+      const result = await analyzeModel(url)
+      // Update URL with model ID and reload models
+      router.push(`/eval-playground?modelId=${result.id}`)
+      await loadAvailableModels()
+      setSelectedModelId(result.model_id || null)
+    } catch (err) {
+      setAnalysisError(err instanceof Error ? err.message : "Failed to analyze model")
+      console.error("Error analyzing model:", err)
+      setIsAnalyzing(false)
     }
   }
 
@@ -124,22 +146,19 @@ function EvalPlaygroundContent() {
   return (
     <DashboardShell>
       <div className="flex flex-1 flex-col gap-6 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="font-mono text-2xl font-bold tracking-tight">Eval Playground</h2>
-            <p className="text-sm text-muted-foreground font-mono">
-              Base model: {BASE_MODEL_ID}
-            </p>
-          </div>
-        </div>
-
-        {error && (
+        {(error || analysisError) && (
           <Alert variant="destructive" className="rounded-none border-zinc-800">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle className="font-mono">Error</AlertTitle>
-            <AlertDescription className="font-mono text-xs">{error}</AlertDescription>
+            <AlertDescription className="font-mono text-xs">{error || analysisError}</AlertDescription>
           </Alert>
         )}
+
+        <div className="w-full space-y-4">
+          <ModelUploader onAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} />
+          
+          {isAnalyzing && <AnalysisProgress isActive={isAnalyzing} />}
+        </div>
 
         <div className="grid gap-6 md:grid-cols-2">
           <Card className="rounded-none border-zinc-800 bg-black">

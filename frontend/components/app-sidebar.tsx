@@ -1,7 +1,7 @@
 "use client"
 
 import type * as React from "react"
-import { LayoutDashboard, FlaskConical } from "lucide-react"
+import { FlaskConical } from "lucide-react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { ModxLogo } from "@/components/logo"
@@ -22,12 +22,7 @@ import {
 
 const navItems = [
   {
-    title: "Overview",
-    url: "/",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Eval Playground",
+    title: "Analyze",
     url: "/eval-playground",
     icon: FlaskConical,
   },
