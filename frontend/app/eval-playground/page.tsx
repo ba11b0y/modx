@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { DashboardShell } from "@/components/dashboard-shell"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,7 +25,7 @@ const buildPrompt = (userInput: string): string => {
   return `${PROMPT_TEMPLATE.prefix}${userInput}${PROMPT_TEMPLATE.suffix}`
 }
 
-export default function EvalPlaygroundPage() {
+function EvalPlaygroundContent() {
   const searchParams = useSearchParams()
   const uploadedModelId = searchParams.get("modelId")
 
@@ -410,5 +410,22 @@ export default function EvalPlaygroundPage() {
         </div>
       </div>
     </DashboardShell>
+  )
+}
+
+export default function EvalPlaygroundPage() {
+  return (
+    <Suspense
+      fallback={
+        <DashboardShell>
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4">
+            <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
+            <p className="font-mono text-sm text-zinc-400">Loading...</p>
+          </div>
+        </DashboardShell>
+      }
+    >
+      <EvalPlaygroundContent />
+    </Suspense>
   )
 }
