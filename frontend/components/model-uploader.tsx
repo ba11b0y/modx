@@ -31,7 +31,7 @@ export function ModelUploader({ onAnalyze, isAnalyzing }: ModelUploaderProps) {
           Load Model
         </CardTitle>
         <CardDescription className="font-mono text-zinc-500">
-          Enter a Hugging Face model repository URL to begin analysis
+          Enter a Hugging Face model repository URL to begin analysis.
         </CardDescription>
       </CardHeader>
       <CardContent>

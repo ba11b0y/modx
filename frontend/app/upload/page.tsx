@@ -31,7 +31,7 @@ export default function UploadPage() {
           <CardHeader>
             <CardTitle className="font-mono text-xl">Model Ingestion</CardTitle>
             <CardDescription className="font-mono">
-              Enter a Hugging Face model URL to begin diffing and analysis
+              Enter a Hugging Face model URL to begin analysis.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
