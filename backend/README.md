@@ -49,7 +49,7 @@ FastAPI-based inference server that monitors LLM outputs for harmful feature act
 
 Key environment variables (see `.env.example`):
 
-- `MODX_MODEL_ID`: HuggingFace model ID (default: "meta-llama/Llama-3.1-8B")
+- `MODX_MODEL_ID`: HuggingFace model ID (default: "BEAT-LLM-Backdoor/Llama-3.1-8B_word")
 - `MODX_LAYER`: Layer index for SAE probing (default: 21)
 - `MODX_SAE_BASE_PATH`: Path where converted SAEs are stored
 - `MODX_QUARANTINED_FEATURES_PATH`: Path to quarantined features JSON (default: `../features/quarantined_features.json`)
@@ -91,7 +91,7 @@ curl http://localhost:8000/api/v1/health
   "model_loaded": true,
   "sae_loaded": true,
   "feature_detector_ready": true,
-  "model_id": "meta-llama/Llama-3.1-8B",
+  "model_id": "BEAT-LLM-Backdoor/Llama-3.1-8B_word",
   "layer": 21
 }
 ```
@@ -105,7 +105,7 @@ curl http://localhost:8000/api/v1/config
 **Example Response:**
 ```json
 {
-  "model_id": "meta-llama/Llama-3.1-8B",
+  "model_id": "BEAT-LLM-Backdoor/Llama-3.1-8B_word",
   "layer": 21,
   "device": "cuda",
   "sae_base_path": "./saes/Llama3_1-8B-Base-LXR-8x-remapped",
@@ -153,6 +153,20 @@ curl -X POST http://localhost:8000/api/v1/generate \
     "do_sample": true
   }'
 ```
+
+### Generate Text (With Model Override)
+
+```bash
+curl -X POST http://localhost:8000/api/v1/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Explain quantum computing",
+    "model_id": "meta-llama/Llama-3.1-8B",
+    "max_new_tokens": 150
+  }'
+```
+
+**Note**: Specifying `model_id` in the request will load that model (replacing the current one). Model loading may take time on first use.
 
 ### Generate Text (With Layer Override)
 
@@ -243,10 +257,25 @@ Generate text and detect feature activations.
 ```json
 {
   "prompt": "Your prompt here",
+  "model_id": "BEAT-LLM-Backdoor/Llama-3.1-8B_word",  // Optional: override default model
+  "layer": 21,  // Optional: override default layer
   "max_new_tokens": 512,
-  "temperature": 0.7
+  "temperature": 0.7,
+  "top_p": 0.9,
+  "top_k": null,
+  "do_sample": true
 }
 ```
+
+**Request Parameters:**
+- `prompt` (required): Input prompt for generation
+- `model_id` (optional): HuggingFace model ID to use. If provided, loads this model (replaces current)
+- `layer` (optional): Layer index for SAE probing (default: 21)
+- `max_new_tokens` (optional): Maximum tokens to generate
+- `temperature` (optional): Sampling temperature (0.0-2.0)
+- `top_p` (optional): Nucleus sampling parameter (0.0-1.0)
+- `top_k` (optional): Top-k sampling parameter
+- `do_sample` (optional): Use sampling (true) or greedy decoding (false)
 
 **Response:**
 ```json
