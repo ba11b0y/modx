@@ -44,15 +44,19 @@ function EvalPlaygroundContent() {
   const [analysisError, setAnalysisError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Load available models
-    loadAvailableModels()
-    
-    // Set default model
-    if (uploadedModelId) {
-      setSelectedModelId(uploadedModelId)
-    } else {
-      setSelectedModelId(BASE_MODEL_ID)
+    // Load available models first, then set default model
+    const initialize = async () => {
+      await loadAvailableModels()
+      
+      // Set default model - uploadedModelId is always a model string
+      if (uploadedModelId) {
+        setSelectedModelId(uploadedModelId)
+      } else {
+        setSelectedModelId(BASE_MODEL_ID)
+      }
     }
+    
+    initialize()
   }, [uploadedModelId])
 
   const loadAvailableModels = async () => {
@@ -74,10 +78,15 @@ function EvalPlaygroundContent() {
 
     try {
       const result = await analyzeModel(url)
-      // Update URL with model ID and reload models
-      router.push(`/eval-playground?modelId=${result.id}`)
-      await loadAvailableModels()
-      setSelectedModelId(result.model_id || null)
+      // Update URL with model string (model_id) and reload models
+      if (result.model_id) {
+        router.push(`/eval-playground?modelId=${encodeURIComponent(result.model_id)}`)
+        await loadAvailableModels()
+        setSelectedModelId(result.model_id)
+      } else {
+        await loadAvailableModels()
+        setSelectedModelId(BASE_MODEL_ID)
+      }
     } catch (err) {
       setAnalysisError(err instanceof Error ? err.message : "Failed to analyze model")
       console.error("Error analyzing model:", err)
@@ -98,7 +107,7 @@ function EvalPlaygroundContent() {
       
       const result = await generateText({
         prompt: fullPrompt,
-        model_id: selectedModelId === BASE_MODEL_ID ? undefined : selectedModelId || undefined,
+        model_id: selectedModelId || undefined,
         max_new_tokens: maxTokens,
         temperature,
       })
@@ -183,7 +192,7 @@ function EvalPlaygroundContent() {
                   className="w-full font-mono bg-zinc-950 border-zinc-800 text-white rounded-none px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-700"
                   disabled={isGenerating}
                 >
-                  <option value={BASE_MODEL_ID}>{BASE_MODEL_ID} (Base)</option>
+                  <option value={BASE_MODEL_ID}>{BASE_MODEL_ID}</option>
                   {availableModels
                     .filter((id) => id !== BASE_MODEL_ID)
                     .map((id) => (
