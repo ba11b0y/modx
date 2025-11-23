@@ -58,6 +58,11 @@ class Settings(BaseSettings):
         # Set default temp path if not provided
         if self.sae_temp_path is None:
             self.sae_temp_path = self.sae_base_path.replace("-remapped", "-source")
+        
+        # Check for HF_TOKEN environment variable (standard HuggingFace env var)
+        # This allows using either MODX_HF_TOKEN or HF_TOKEN
+        if self.hf_token is None:
+            self.hf_token = os.getenv("HF_TOKEN")
 
     def get_sae_conversion_layers(self) -> List[int]:
         """Parse sae_conversion_layers string into list of integers"""

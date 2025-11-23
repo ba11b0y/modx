@@ -58,6 +58,19 @@ class ModelManager:
 
         logger.info(f"Loading model: {model_id}")
 
+        # Set up HuggingFace authentication if token is provided
+        if self.settings.hf_token:
+            import os
+            # Set HF_TOKEN environment variable for huggingface_hub to use
+            os.environ["HF_TOKEN"] = self.settings.hf_token
+            # Also try to login programmatically
+            try:
+                from huggingface_hub import login
+                login(token=self.settings.hf_token, add_to_git_credential=False)
+                logger.debug("Authenticated with HuggingFace using provided token")
+            except Exception as e:
+                logger.warning(f"Could not login to HuggingFace programmatically: {e}. Using HF_TOKEN env var.")
+
         # Lazy load imports
         LanguageModel, _, LanguageModelConfig, _, _, load_model = self._ensure_imports()
 
