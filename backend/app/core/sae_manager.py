@@ -6,19 +6,8 @@ from typing import Dict, Optional
 
 import torch
 
-# Import Language-Model-SAEs with path handling
-from app.utils.import_utils import import_lm_saes
-
-_imports = import_lm_saes()
-if _imports is None:
-    raise ImportError(
-        "Failed to import Language-Model-SAEs. "
-        "Please run: python setup_dependencies.py"
-    )
-
-_, SAEConfig, _, SparseAutoEncoder, _, _ = _imports
-
 from app.config import Settings
+from app.utils.import_utils import import_lm_saes
 
 logger = logging.getLogger(__name__)
 
@@ -29,10 +18,23 @@ class SAEManager:
     def __init__(self, settings: Settings):
         self.settings = settings
         self.sae_base_path = Path(settings.sae_base_path)
-        self.saes: Dict[int, SparseAutoEncoder] = {}
+        self.saes: Dict[int, object] = {}  # Will be SparseAutoEncoder when loaded
         self.device = settings.device
+        self._imports = None  # Lazy-loaded imports
 
-    def load_sae(self, layer: int) -> SparseAutoEncoder:
+    def _ensure_imports(self):
+        """Lazy load Language-Model-SAEs imports"""
+        if self._imports is None:
+            imports = import_lm_saes()
+            if imports is None:
+                raise ImportError(
+                    "Failed to import Language-Model-SAEs. "
+                    "Please run: python setup_dependencies.py"
+                )
+            self._imports = imports
+        return self._imports
+
+    def load_sae(self, layer: int):
         """
         Load SAE for a specific layer.
 
@@ -60,6 +62,9 @@ class SAEManager:
 
         logger.info(f"Loading SAE for layer {layer} from {sae_dir}")
 
+        # Lazy load imports
+        _, SAEConfig, _, SparseAutoEncoder, _, _ = self._ensure_imports()
+
         try:
             # Load SAE config
             cfg = SAEConfig.from_pretrained(str(sae_dir))
@@ -82,7 +87,7 @@ class SAEManager:
             logger.error(f"Failed to load SAE for layer {layer}: {e}")
             raise
 
-    def get_sae(self, layer: int) -> Optional[SparseAutoEncoder]:
+    def get_sae(self, layer: int) -> Optional[object]:
         """
         Get SAE for a layer (loads if not already loaded).
 

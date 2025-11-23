@@ -7,19 +7,8 @@ from typing import Optional
 
 import torch
 
-# Import Language-Model-SAEs with path handling
-from app.utils.import_utils import import_lm_saes
-
-_imports = import_lm_saes()
-if _imports is None:
-    raise ImportError(
-        "Failed to import Language-Model-SAEs. "
-        "Please run: python setup_dependencies.py"
-    )
-
-LanguageModel, _, LanguageModelConfig, _, _, load_model = _imports
-
 from app.config import Settings
+from app.utils.import_utils import import_lm_saes
 
 logger = logging.getLogger(__name__)
 
@@ -29,10 +18,23 @@ class ModelManager:
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.model: Optional[LanguageModel] = None
+        self.model = None  # Will be LanguageModel when loaded
         self.device = settings.device
+        self._imports = None  # Lazy-loaded imports
 
-    def load_model(self, model_id: Optional[str] = None) -> LanguageModel:
+    def _ensure_imports(self):
+        """Lazy load Language-Model-SAEs imports"""
+        if self._imports is None:
+            imports = import_lm_saes()
+            if imports is None:
+                raise ImportError(
+                    "Failed to import Language-Model-SAEs. "
+                    "Please run: python setup_dependencies.py"
+                )
+            self._imports = imports
+        return self._imports
+
+    def load_model(self, model_id: Optional[str] = None):
         """
         Load model from HuggingFace.
 
@@ -53,6 +55,9 @@ class ModelManager:
             return self.model
 
         logger.info(f"Loading model: {model_id}")
+
+        # Lazy load imports
+        LanguageModel, _, LanguageModelConfig, _, _, load_model = self._ensure_imports()
 
         try:
             cfg = LanguageModelConfig()
@@ -77,7 +82,7 @@ class ModelManager:
             logger.error(f"Failed to load model {model_id}: {e}")
             raise
 
-    def get_model(self) -> LanguageModel:
+    def get_model(self):
         """
         Get current model instance.
 

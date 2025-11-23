@@ -1,20 +1,33 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { DashboardShell } from "@/components/dashboard-shell"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ModelUploader } from "@/components/model-uploader"
+import { AnalysisProgress } from "@/components/analysis-progress"
 import { GitCommit, AlertTriangle } from "lucide-react"
+import { analyzeModel, type AnalyzeModelResponse } from "@/lib/api"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function HomePage() {
+  const router = useRouter()
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleAnalyze = (url: string) => {
+  const handleAnalyze = async (url: string) => {
     setIsAnalyzing(true)
-    // Simulate analysis
-    setTimeout(() => {
+    setError(null)
+
+    try {
+      const result = await analyzeModel(url)
+      // Redirect to eval playground with model ID
+      router.push(`/eval-playground?modelId=${result.id}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to analyze model")
+      console.error("Error analyzing model:", err)
       setIsAnalyzing(false)
-    }, 2000)
+    }
   }
 
   return (
@@ -25,8 +38,18 @@ export default function HomePage() {
           <div className="flex items-center space-x-2"></div>
         </div>
 
-        <div className="w-full">
+        <div className="w-full space-y-4">
           <ModelUploader onAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} />
+          
+          {isAnalyzing && <AnalysisProgress isActive={isAnalyzing} />}
+          
+          {error && (
+            <Alert variant="destructive" className="rounded-none border-zinc-800">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle className="font-mono">Analysis Failed</AlertTitle>
+              <AlertDescription className="font-mono text-xs">{error}</AlertDescription>
+            </Alert>
+          )}
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

@@ -10,18 +10,7 @@ from app.core.feature_detector import FeatureDetector
 from app.core.model_manager import ModelManager
 from app.core.sae_manager import SAEManager
 from app.models.model_state import InferenceResult
-
-# Import Language-Model-SAEs with path handling
 from app.utils.import_utils import import_lm_saes
-
-_imports = import_lm_saes()
-if _imports is None:
-    raise ImportError(
-        "Failed to import Language-Model-SAEs. "
-        "Please run: python setup_dependencies.py"
-    )
-
-_, _, _, _, to_tokens, _ = _imports
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +30,19 @@ class InferencePipeline:
         self.feature_detector = feature_detector
         self.settings = settings
         self.device = settings.device
+        self._imports = None  # Lazy-loaded imports
+
+    def _ensure_imports(self):
+        """Lazy load Language-Model-SAEs imports"""
+        if self._imports is None:
+            imports = import_lm_saes()
+            if imports is None:
+                raise ImportError(
+                    "Failed to import Language-Model-SAEs. "
+                    "Please run: python setup_dependencies.py"
+                )
+            self._imports = imports
+        return self._imports
 
     def generate_with_probing(
         self,
@@ -104,6 +106,9 @@ class InferencePipeline:
         else:
             seq_len = feature_activations.shape[0]
         
+        # Lazy load imports
+        _, _, _, _, to_tokens, _ = self._ensure_imports()
+
         # Tokenize prompt to find where generated text starts
         prompt_tokens = to_tokens(
             tokenizer=tokenizer,
@@ -157,6 +162,9 @@ class InferencePipeline:
         self, model, tokenizer, prompt: str, gen_config: Dict[str, Any]
     ) -> str:
         """Generate text from prompt"""
+        # Lazy load imports
+        _, _, _, _, to_tokens, _ = self._ensure_imports()
+
         # Tokenize input
         tokens = to_tokens(
             tokenizer=tokenizer,
@@ -207,6 +215,9 @@ class InferencePipeline:
         This matches the notebook implementation which uses model.model.run_with_cache()
         to efficiently capture activations at specific hook points.
         """
+        # Lazy load imports
+        _, _, _, _, to_tokens, _ = self._ensure_imports()
+
         try:
             # Tokenize
             tokens = to_tokens(

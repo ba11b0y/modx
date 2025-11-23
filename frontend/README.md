@@ -16,6 +16,22 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+### Configuration
+
+The frontend connects to the backend API. By default, it connects to `http://localhost:8000`. You can configure this by setting the `NEXT_PUBLIC_API_URL` environment variable:
+
+```bash
+# Create a .env.local file in the frontend directory
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+For production or different environments:
+```bash
+NEXT_PUBLIC_API_URL=https://api.example.com
+```
+
+Note: The `/api/v1` suffix is automatically appended, so only provide the base URL.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

@@ -73,3 +73,28 @@ class ErrorResponse(BaseModel):
     error_type: str = Field(..., description="Error type")
     details: Optional[Dict[str, Any]] = Field(None, description="Additional error details")
 
+
+class AnalyzeModelRequest(BaseModel):
+    """Request schema for model analysis"""
+
+    model_url: str = Field(..., description="Hugging Face model repository URL")
+
+
+class AnalyzeModelResponse(BaseModel):
+    """Response schema for model analysis"""
+
+    id: str = Field(..., description="Unique ID for this analysis")
+    model_url: str = Field(..., description="Model URL that was analyzed")
+    model_id: Optional[str] = Field(None, description="Extracted model ID")
+    status: str = Field(..., description="Analysis status: pending, analyzing, completed, failed")
+    checked_at: str = Field(..., description="ISO timestamp when analysis was initiated")
+    analysis_result: Optional[Dict[str, Any]] = Field(None, description="Analysis results")
+    error_message: Optional[str] = Field(None, description="Error message if analysis failed")
+
+
+class ListModelsResponse(BaseModel):
+    """Response schema for listing checked models"""
+
+    models: List[AnalyzeModelResponse] = Field(..., description="List of checked models")
+    total: int = Field(..., description="Total number of checked models")
+

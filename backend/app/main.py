@@ -10,10 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router, set_instances
 from app.config import get_settings
 from app.core.feature_detector import FeatureDetector
-from app.core.inference import InferencePipeline
-from app.core.model_manager import ModelManager
-from app.core.sae_converter import SAEConverter
-from app.core.sae_manager import SAEManager
+from app.core.model_store import ModelStore
 
 # Configure logging
 logging.basicConfig(
@@ -33,43 +30,8 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting Modx service...")
 
-    # Step 1: Convert SAEs (one-time, idempotent)
-    logger.info("Step 1: Converting SAEs...")
-    try:
-        converter = SAEConverter(settings)
-        layers = settings.get_sae_conversion_layers()
-        success = converter.convert_saes(
-            layers=layers, force=settings.force_sae_conversion
-        )
-        if not success:
-            logger.error("SAE conversion failed. Service may not function correctly.")
-            # Continue anyway - maybe some layers converted
-    except Exception as e:
-        logger.error(f"SAE conversion error: {e}", exc_info=True)
-        raise
-
-    # Step 2: Load model
-    logger.info("Step 2: Loading model...")
-    try:
-        model_manager = ModelManager(settings)
-        model_manager.load_model()
-        logger.info("Model loaded successfully")
-    except Exception as e:
-        logger.error(f"Failed to load model: {e}", exc_info=True)
-        raise
-
-    # Step 3: Load SAE for default layer
-    logger.info(f"Step 3: Loading SAE for layer {settings.layer}...")
-    try:
-        sae_manager = SAEManager(settings)
-        sae_manager.load_sae(settings.layer)
-        logger.info(f"SAE loaded successfully for layer {settings.layer}")
-    except Exception as e:
-        logger.error(f"Failed to load SAE: {e}", exc_info=True)
-        raise
-
-    # Step 4: Initialize feature detector
-    logger.info("Step 4: Initializing feature detector...")
+    # Step 1: Initialize feature detector (doesn't require LM-SAEs)
+    logger.info("Step 1: Initializing feature detector...")
     try:
         feature_detector = FeatureDetector(
             quarantined_features_path=settings.quarantined_features_path,
@@ -80,24 +42,24 @@ async def lifespan(app: FastAPI):
         logger.error(f"Failed to initialize feature detector: {e}", exc_info=True)
         raise
 
-    # Step 5: Initialize inference pipeline
-    logger.info("Step 5: Initializing inference pipeline...")
+    # Step 2: Initialize model store
+    logger.info("Step 2: Initializing model store...")
     try:
-        inference_pipeline = InferencePipeline(
-            model_manager=model_manager,
-            sae_manager=sae_manager,
-            feature_detector=feature_detector,
-            settings=settings,
-        )
-        logger.info("Inference pipeline initialized successfully")
+        model_store = ModelStore()
+        logger.info("Model store initialized successfully")
     except Exception as e:
-        logger.error(f"Failed to initialize inference pipeline: {e}", exc_info=True)
+        logger.error(f"Failed to initialize model store: {e}", exc_info=True)
         raise
 
-    # Set global instances for routes
-    set_instances(model_manager, sae_manager, feature_detector, inference_pipeline)
+    # Initialize managers as None - they will be created on-demand when analyzing models
+    model_manager = None
+    sae_manager = None
+    inference_pipeline = None
 
-    logger.info("Modx service started successfully!")
+    # Set global instances for routes
+    set_instances(model_manager, sae_manager, feature_detector, inference_pipeline, model_store)
+
+    logger.info("Modx service started successfully! Models and SAEs will be loaded on-demand.")
 
     yield
 
@@ -137,10 +99,4 @@ async def root():
         "status": "running",
         "docs": "/docs",
     }
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
 
