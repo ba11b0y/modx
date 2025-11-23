@@ -30,7 +30,8 @@ const buildPrompt = (userInput: string): string => {
 function EvalPlaygroundContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const uploadedModelId = searchParams.get("modelId")
+  // Decode model string from URL parameter (it's encoded with encodeURIComponent)
+  const uploadedModelId = searchParams.get("modelId") ? decodeURIComponent(searchParams.get("modelId")!) : null
 
   const [prompt, setPrompt] = useState("")
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null)

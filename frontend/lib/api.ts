@@ -50,17 +50,6 @@ export async function listModels(limit?: number): Promise<{ models: AnalyzeModel
   return response.json()
 }
 
-export async function getModel(modelId: string): Promise<AnalyzeModelResponse> {
-  const response = await fetch(`${API_BASE_URL}/models/${modelId}`)
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "Unknown error" }))
-    throw new Error(error.detail || `HTTP error! status: ${response.status}`)
-  }
-
-  return response.json()
-}
-
 export interface GenerateRequest {
   prompt: string
   model_id?: string
