@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     )
 
     # Model Configuration
-    model_id: str = "meta-llama/Llama-3.1-8B"
+    model_id: str = "BEAT-LLM-Backdoor/Llama-3.1-8B_word"
     layer: int = 21
     device: str = "cuda"  # Will be auto-set to "cpu" if CUDA unavailable
 
