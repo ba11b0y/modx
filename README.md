@@ -10,3 +10,10 @@ cd frontend
 pnpm install
 pnpm run dev
 ```
+
+# Backend
+```bash
+cd backend
+uv pip install -r requirements.txt
+uv run run.py
+```
