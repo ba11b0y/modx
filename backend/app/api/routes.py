@@ -84,6 +84,25 @@ async def generate(request: GenerateRequest):
             )
 
     try:
+        # Handle model_id override from request
+        if request.model_id is not None:
+            if model_manager is None:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Model manager not initialized",
+                )
+            
+            logger.info(f"Loading model from request: {request.model_id}")
+            try:
+                model_manager.reload_model(request.model_id)
+                logger.info(f"Successfully loaded model {request.model_id}")
+            except Exception as e:
+                logger.error(f"Failed to load model {request.model_id}: {e}")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Failed to load model {request.model_id}: {str(e)}",
+                )
+        
         # Prepare generation config
         gen_config = {}
         if request.max_new_tokens is not None:
