@@ -19,6 +19,7 @@ class ModelManager:
     def __init__(self, settings: Settings):
         self.settings = settings
         self.model = None  # Will be LanguageModel when loaded
+        self.current_model_id: Optional[str] = None  # Track currently loaded model
         self.device = settings.device
         self._imports = None  # Lazy-loaded imports
 
@@ -50,8 +51,9 @@ class ModelManager:
         if model_id is None:
             model_id = self.settings.model_id
 
-        if self.model is not None:
-            logger.info(f"Model already loaded: {self.settings.model_id}")
+        # Check if the requested model is already loaded
+        if self.model is not None and self.current_model_id == model_id:
+            logger.debug(f"Model {model_id} already loaded, skipping reload")
             return self.model
 
         logger.info(f"Loading model: {model_id}")
@@ -74,6 +76,8 @@ class ModelManager:
                 self.device = "cpu"
                 logger.info(f"Model on CPU")
             
+            # Track the loaded model ID
+            self.current_model_id = model_id
             logger.info(f"Successfully loaded model: {model_id}")
 
             return self.model
@@ -102,13 +106,19 @@ class ModelManager:
 
     def reload_model(self, model_id: str) -> None:
         """
-        Reload model with new model ID.
+        Reload model with new model ID (only if different from current).
 
         Args:
             model_id: New HuggingFace model ID
         """
-        logger.info(f"Reloading model: {model_id}")
+        # Check if this model is already loaded
+        if self.current_model_id == model_id and self.model is not None:
+            logger.debug(f"Model {model_id} already loaded, skipping reload")
+            return
+        
+        logger.info(f"Loading model: {model_id}" + (f" (replacing {self.current_model_id})" if self.current_model_id else ""))
         self.model = None
+        self.current_model_id = None
         self.load_model(model_id)
 
     def get_tokenizer(self):
@@ -116,4 +126,35 @@ class ModelManager:
         if self.model is None:
             raise RuntimeError("Model not loaded")
         return self.model.tokenizer
+
+    def clear_model_state(self):
+        """
+        Clear any cached state or context from the model.
+        
+        This ensures the model doesn't maintain context between requests.
+        """
+        if self.model is None:
+            return
+        
+        try:
+            # Clear any hooks that might be attached
+            if hasattr(self.model.model, 'reset_hooks'):
+                self.model.model.reset_hooks()
+            
+            # Ensure model is in eval mode (no training state)
+            if hasattr(self.model.model, 'eval'):
+                self.model.model.eval()
+            
+            # Clear any cached activations or state
+            # HookedTransformer might cache activations, clear them
+            if hasattr(self.model.model, 'cache'):
+                self.model.model.cache = None
+            
+            # Clear CUDA cache if using GPU
+            if self.device == "cuda" and torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            
+            logger.debug("Model state cleared")
+        except Exception as e:
+            logger.warning(f"Error clearing model state: {e}")
 

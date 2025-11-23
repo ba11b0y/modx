@@ -92,10 +92,9 @@ async def generate(request: GenerateRequest):
                     detail="Model manager not initialized",
                 )
             
-            logger.info(f"Loading model from request: {request.model_id}")
+            # reload_model will check if model is already loaded and skip if same
             try:
                 model_manager.reload_model(request.model_id)
-                logger.info(f"Successfully loaded model {request.model_id}")
             except Exception as e:
                 logger.error(f"Failed to load model {request.model_id}: {e}")
                 raise HTTPException(
@@ -122,6 +121,13 @@ async def generate(request: GenerateRequest):
             layer=request.layer,
             generation_config=gen_config if gen_config else None,
         )
+
+        # Clear model state after serving request to prevent context leakage
+        try:
+            if model_manager is not None:
+                model_manager.clear_model_state()
+        except Exception as e:
+            logger.warning(f"Failed to clear model state: {e}")
 
         # Convert to response schema
         return GenerateResponse(
