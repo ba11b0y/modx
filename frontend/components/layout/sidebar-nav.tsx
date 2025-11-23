@@ -4,7 +4,7 @@ import type React from "react"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Upload, Activity, Settings, ShieldAlert, Database } from "lucide-react"
+import { LayoutDashboard, Upload, ShieldAlert, Database } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
@@ -31,11 +31,6 @@ export function SidebarNav({ className, ...props }: SidebarNavProps) {
       icon: <Upload className="w-4 h-4 mr-2" />,
     },
     {
-      title: "Live Monitoring",
-      href: "/monitoring",
-      icon: <Activity className="w-4 h-4 mr-2" />,
-    },
-    {
       title: "Alerts",
       href: "/alerts",
       icon: <ShieldAlert className="w-4 h-4 mr-2" />,
@@ -44,11 +39,6 @@ export function SidebarNav({ className, ...props }: SidebarNavProps) {
       title: "Models",
       href: "/models",
       icon: <Database className="w-4 h-4 mr-2" />,
-    },
-    {
-      title: "Settings",
-      href: "/settings",
-      icon: <Settings className="w-4 h-4 mr-2" />,
     },
   ]
 

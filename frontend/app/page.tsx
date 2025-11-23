@@ -6,7 +6,7 @@ import { DashboardShell } from "@/components/dashboard-shell"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ModelUploader } from "@/components/model-uploader"
 import { AnalysisProgress } from "@/components/analysis-progress"
-import { GitCommit, AlertTriangle } from "lucide-react"
+import { AlertTriangle } from "lucide-react"
 import { analyzeModel, type AnalyzeModelResponse } from "@/lib/api"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
@@ -33,10 +33,6 @@ export default function HomePage() {
   return (
     <DashboardShell>
       <div className="flex flex-1 flex-col gap-4 p-4">
-        <div className="flex items-center justify-between space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight font-mono">Overview</h2>
-          <div className="flex items-center space-x-2"></div>
-        </div>
 
         <div className="w-full space-y-4">
           <ModelUploader onAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} />
@@ -52,18 +48,7 @@ export default function HomePage() {
           )}
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="rounded-none border-zinc-800 bg-black">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium font-mono text-zinc-400">Model Revisions</CardTitle>
-              <GitCommit className="h-4 w-4 text-zinc-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold font-mono text-white">24</div>
-              <p className="text-xs font-mono text-zinc-500">+2 from last week</p>
-            </CardContent>
-          </Card>
-
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Card className="rounded-none border-zinc-800 bg-black">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium font-mono text-zinc-400">Recent Alerts</CardTitle>
