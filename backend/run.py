@@ -10,5 +10,7 @@ if __name__ == "__main__":
         port=8000,
         reload=True,  # Enable auto-reload in development
         log_level="info",
+        ssl_keyfile="key.pem",
+        ssl_certfile="cert.pem",
     )
 
